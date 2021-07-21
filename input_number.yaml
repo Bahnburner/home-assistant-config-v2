@@ -1,0 +1,7 @@
+movie_mode:
+  name: Movie Mode
+  initial: 255
+  min: 0
+  max: 255
+  step: 1
+

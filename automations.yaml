@@ -1,0 +1,1280 @@
+- id: '1626486954632'
+  alias: Bias Light On
+  description: ''
+  trigger:
+  - platform: state
+    from: 'off'
+    to: 'on'
+    entity_id: media_player.vizio_m70_smartcast
+  - platform: state
+    entity_id: media_player.living_room_tv
+    to:
+    - playing
+    - idle
+    - 'on'
+  - platform: state
+    entity_id: media_player.shield_tv
+    to:
+    - 'on'
+    - idle
+    - playing
+    - standby
+  condition: []
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom_bias_light
+    data:
+      transition: 5
+      brightness: 175
+    data_template:
+      color_temp: "{% if states.input_boolean.movie_mode.state == true %}\n  500\n\
+        {% elif (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n  500\n\
+        {% elif (states.sensor.decimal_time.state | round(2)) <= 09.50 %}\n  200\n\
+        {% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n  500\n\
+        {% elif states.sun.sun.attributes.elevation < 8 %}\n  300\n{% elif (states.sensor.decimal_time.state\
+        \ | round(2)) > 9.50 %}\n  250\n{% else %} {% endif %}\n"
+  mode: restart
+- id: '1626487367059'
+  alias: Bias Light Off
+  description: ''
+  trigger:
+  - platform: state
+    to: 'off'
+    entity_id: media_player.vizio_m70
+  - platform: state
+    entity_id: media_player.shield_tv
+    from: playingidle,on,standby
+    to: 'off'
+  - platform: state
+    entity_id: media_player.vizio_m70_smartcast
+    to: 'off'
+  condition: []
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.livingroom_bias_light
+    data: {}
+  mode: restart
+- id: '1626491142306'
+  alias: IFTTT Trigger
+  description: ''
+  trigger:
+  - platform: event
+    event_type: ifttt_webhook_received
+    event_data:
+      action: call_service
+  condition: []
+  action:
+  - service_template: '{{ trigger.event.data.service }}'
+    data_template:
+      entity_id: '{{ trigger.event.data.entity_id }}'
+  mode: parallel
+  max: 10
+- id: '1626493126561'
+  alias: Cabinet Lights On
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: sensor.brightness_lr
+    id: brightness_lr changed
+  - platform: state
+    from: 'off'
+    entity_id: input_boolean.away_mode
+    to: 'on'
+  - platform: state
+    entity_id: light.livingroom
+    to: 'on'
+  - platform: state
+    entity_id: light.livingroom
+    attribute: brightness
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service_template: "{% if now().weekday() == 5 or now().weekday() == 6%}\n  script.cabinet_lights_weekend\n\
+      {% else %}\n  script.cabinet_lights_weekday\n{% endif %}\n"
+  mode: single
+- id: '1626493600253'
+  alias: Cabinet Lights Off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: light.livingroom
+    from: 'on'
+    to: 'off'
+  - platform: state
+    from: 'off'
+    to: 'on'
+    entity_id: input_boolean.away_mode
+  condition: []
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.cabinet_lights
+    data:
+      transition: 5
+  mode: single
+- id: '1626493784062'
+  alias: Morning Stage 1 - Weekend
+  description: ''
+  trigger:
+  - platform: time
+    at: 07:30:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.pantry
+    data:
+      transition: 60
+      brightness: 255
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      transition: 60
+      brightness: 50
+      color_temp: 200
+  mode: single
+- id: '1626494079098'
+  alias: Morning Stage 2 - Weekend
+  description: ''
+  trigger:
+  - platform: time
+    at: 08:00:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - condition: time
+    weekday:
+    - sat
+    - sun
+  action:
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.livingroom
+    data:
+      transition: 60
+      brightness: 255
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) < 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) >= 9.50 %}\n  300\n{% else\
+        \ %}\n  366\n{% endif %}\n  \n"
+  - service: script.cabinet_lights_weekend
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.pantry
+      - light.recessed_lights
+    data:
+      transition: 60
+      brightness: 255
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      brightness: 255
+      color_temp: 200
+      transition: 1800
+  - service: lock.unlock
+    target:
+      entity_id: lock.back_door
+  - service: script.fan_on
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.master_suite
+    data:
+      media_content_id: http://smrtho.us/storage/30secsilence.mp3
+      media_content_type: music
+  - service: media_player.volume_set
+    target:
+      entity_id: media_player.master_suite
+    data:
+      volume_level: 0.4
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.master_suite
+  mode: single
+- id: '1626543972614'
+  alias: Startup Alert
+  description: ''
+  trigger:
+  - platform: homeassistant
+    event: start
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.mancave_assistant
+    data:
+      media_content_id: http://smrtho.us/storage/startup.mp3
+      media_content_type: audio/mp3
+  - service: automation.turn_off
+    target:
+      entity_id: automation.home_mode
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - service: automation.turn_on
+    target:
+      entity_id: automation.home_mode
+  mode: single
+- id: '1626545117208'
+  alias: December
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:00
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '''{{ now().month == 12 }}'''
+      sequence:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.christmas_lights
+    - conditions:
+      - condition: template
+        value_template: '''{{ now().month != 12 }}'''
+      sequence:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.christmas_lights
+    default: []
+  mode: single
+- id: '1626545263273'
+  alias: Toggle away mode
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: group.tristal
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: group.tristal
+        state: not_home
+      sequence:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.away_mode
+    - conditions:
+      - condition: state
+        entity_id: group.tristal
+        state: home
+      sequence:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.away_mode
+    default: []
+  mode: restart
+- id: '1626545959453'
+  alias: Away Mode
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: input_boolean.away_mode
+    from: 'Off'
+    to: 'On'
+  condition: []
+  action:
+  - service: script.media_players_off
+  - service: light.turn_off
+    target:
+      entity_id: light.master_bedroom
+  - service: nest.set_away_mode
+    data:
+      away_mode: away
+      structure: Hidden Ridge
+  - service: script.fan_off
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.ceiling_light
+      - light.pantry
+      - light.foyer
+      - light.dining_room
+      - light.recessed_lights
+      - light.mancave
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.overhead_light
+      - switch.chandelier
+      - switch.patio_lights
+      - switch.nightlight
+  - service: cover.close_cover
+    target:
+      entity_id: cover.garage_door_opener
+  - choose:
+    - conditions:
+      - condition: sun
+        after: sunset
+        before_offset: 00:30:00
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id:
+          - light.livingroom
+        data:
+          brightness: 100
+    default:
+    - service: light.turn_off
+      target:
+        entity_id: light.livingroom
+  - delay:
+      hours: 0
+      minutes: 3
+      seconds: 0
+      milliseconds: 0
+  - service: media_player.turn_on
+    target:
+      entity_id: media_player.livingroom_assistant
+  - service: media_player.volume_set
+    target:
+      entity_id: media_player.livingroom_assistant
+    data:
+      volume_level: 0.3
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.livingroom_assistant
+    data:
+      media_content_id: http://listen.181fm.com/181-eagle_128k.mp3?cb=241184.mp3
+      media_content_type: audio/mp3
+  - service: lock.lock
+    target:
+      entity_id:
+      - lock.front_door
+      - lock.back_door
+  mode: single
+- id: '1626546365442'
+  alias: Home Mode
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: input_boolean.away_mode
+    from: 'on'
+    to: 'off'
+  condition: []
+  action:
+  - service: nest.set_away_mode
+    data:
+      away_mode: home
+      structure: Hidden Ridge
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.pantry
+      - light.recessed_lights
+      - light.ceiling_light
+    data:
+      brightness: 255
+  - service: script.livingroom_on
+  - service: script.master_bedroom_on
+  - service: script.fan_on
+  - service: lock.unlock
+    target:
+      entity_id: lock.back_door
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.livingroom_assistant
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.4
+    target:
+      entity_id:
+      - media_player.livingroom_assistant
+      - media_player.dining_room_speaker
+      - media_player.mancave_assistant
+      - media_player.crystals_clock
+      - media_player.tristans_clock
+      - media_player.she_shed_assistant
+      - media_player.bathroom_assistant
+      - media_player.kitchen_display
+  - condition: sun
+    after: sunset
+    before_offset: 00:30:00
+  - service: switch.turn_on
+    target:
+      entity_id: switch.nightlight
+  - condition: time
+    before: 00:00:00
+  - service: switch.turn_on
+    target:
+      entity_id: switch.patio_lights
+  - choose:
+    - conditions:
+      - condition: sun
+        before: sunset
+        after: sunset
+        after_offset: -00:30:00
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.nightlight
+    default: []
+  mode: single
+- id: '1626547209421'
+  alias: Home Mode - Garage Delay
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: cover.garage_door_opener
+    from: closed
+    to: opening,open,closing
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'on'
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.garage_hot_start
+  - service: automation.trigger
+    target:
+      entity_id: automation.home_mode
+  - delay:
+      hours: 0
+      minutes: 10
+      seconds: 0
+      milliseconds: 0
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.garage_hot_start
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'on'
+  - service: automation.trigger
+    target:
+      entity_id: automation.away_mode
+  mode: single
+- id: '1626547570445'
+  alias: Garbage reminder
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - person.tristan
+    - person.crystal
+    from: not_home
+    to: home
+    for: '30'
+  condition:
+  - condition: time
+    weekday:
+    - thu
+  action:
+  - service: media_player.volume_set
+    target:
+      entity_id: media_player.all_speakers
+    data:
+      volume_level: 0.4
+  - service: tts.google_translate_say
+    data:
+      entity_id: media_player.all_assistants
+      message: Heads up, tomorrow is trash day.
+  mode: single
+- id: '1626547649875'
+  alias: Garbage Reminder 2
+  description: ''
+  trigger:
+  - platform: time
+    at: 07:30:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: media_player.volume_set
+    target:
+      entity_id: media_player.all_assistants
+    data:
+      volume_level: 0.4
+  - service: tts.google_translate_say
+    data:
+      entity_id: media_player.all_assistants
+      message: 'Heads up. Today is trash day. '
+  mode: single
+- id: '1626550170827'
+  alias: Exterior Lights ON
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: -00:30:00
+  condition: []
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.exterior
+    data:
+      brightness: 255
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - service: switch.turn_on
+    target:
+      entity_id: switch.patio_lights
+  mode: single
+- id: '1626550374010'
+  alias: Exterior Lights OFF
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 00:30:00
+  condition: []
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.exterior
+  - service: switch.turn_off
+    target:
+      entity_id: switch.patio_lights
+  mode: single
+- id: '1626550477693'
+  alias: Exterior Lights DIM
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:00
+  condition: []
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.exterior
+    data:
+      brightness: 100
+  - service: switch.turn_off
+    target:
+      entity_id: switch.patio_lights
+  - condition: state
+    entity_id: input_boolean.christmas_lights
+    state: 'on'
+  - service: switch.turn_off
+    target:
+      entity_id: switch.christmas_lights
+  mode: single
+- id: '1626550994030'
+  alias: Pantry Dim
+  description: ''
+  trigger:
+  - platform: time
+    at: '23:00:00'
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.pantry
+    data:
+      brightness: 127
+      transition: 60
+  mode: single
+- id: '1626551381983'
+  alias: Jensen's Nightlight OFF
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 00:30:00
+  condition: []
+  action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.nightlight
+  - service: light.turn_on
+    target:
+      entity_id: light.ceiling_light
+    data:
+      transition: 60
+      brightness: 255
+  mode: single
+- id: '1626551430597'
+  alias: Jensen's Nightlight ON
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: -00:30:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.nightlight
+  mode: single
+- id: '1626551588621'
+  alias: Sunset - Unoccupied
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: -00:30:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'on'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      brightness: 127
+      color_temp: 300
+  mode: single
+- id: '1626551650706'
+  alias: Sunrise - Unoccupied
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 00:30:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'on'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.livingroom
+  mode: single
+- id: '1626551942306'
+  alias: Morning Stage 3
+  description: ''
+  trigger:
+  - platform: time
+    at: 09:30:00
+  condition:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.away_mode
+      state: 'off'
+    - condition: state
+      entity_id: light.livingroom
+      state: 'on'
+    - condition: state
+      entity_id: light.livingroom
+      state: '200'
+      attribute: color_temp
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      transition: 1800
+      brightness: 255
+      color_temp: 300
+  - condition: state
+    entity_id: light.master_bedroom
+    state: 'on'
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      transition: 1800
+      color_temp: 300
+      brightness: 255
+  mode: single
+- id: '1626552171795'
+  alias: Morning Stage 1 - Weekday
+  description: ''
+  trigger:
+  - platform: time
+    at: 06:00:00
+  condition:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.pantry
+    data:
+      transition: 60
+      brightness: 127
+  - service: light.turn_on
+    data:
+      transition: 60
+      brightness: 50
+      color_temp: 500
+    target:
+      entity_id: light.master_bedroom
+  mode: single
+- id: '1626552516032'
+  alias: Morning Stage 2 - Weekday
+  description: ''
+  trigger:
+  - platform: time
+    at: 06:30:00
+  condition:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      transition: 60
+      brightness: 255
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) < 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) >= 9.50 %}\n  300\n{% else\
+        \ %}\n  366\n{% endif %}\n  \n"
+  - service: script.cabinet_lights_weekday
+  - service: light.turn_on
+    target:
+      entity_id: light.pantry
+    data:
+      transition: 60
+      brightness: 255
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      transition: 1800
+      color_temp: 200
+      brightness: 255
+  - service: script.fan_on
+  - service: lock.unlock
+    target:
+      entity_id: lock.back_door
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.master_suite
+    data:
+      media_content_id: http://smrtho.us/storage/30secsilence.mp3
+      media_content_type: audio/mp3
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: media_player.volume_set
+    target:
+      entity_id: media_player.master_suite
+    data:
+      volume_level: 0.4
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.6
+    target:
+      entity_id:
+      - media_player.crystals_clock
+      - media_player.tristans_clock
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.master_suite
+  mode: single
+- id: '1626553152454'
+  alias: Evening Lights
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: '8'
+  condition:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.away_mode
+      state: 'off'
+    - condition: state
+      entity_id: light.livingroom
+      state: 'on'
+    - condition: state
+      entity_id: input_boolean.movie_mode
+      state: 'off'
+  action:
+  - service: script.master_bedroom_evening
+  - service: script.living_room_evening
+  - condition: and
+    conditions:
+    - condition: time
+      weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+    - condition: state
+      entity_id: light.cabinet_lights
+      state: 'on'
+  - service: light.turn_on
+    data:
+      transition: 1800
+      color_temp: 366
+    target:
+      entity_id: light.cabinet_lights
+  mode: single
+- id: '1626554524461'
+  alias: Lights BEDTIME
+  description: ''
+  trigger:
+  - platform: time
+    at: '22:15:00'
+  condition: []
+  action:
+  - service: script.master_bedroom_bedtime
+  - condition: state
+    entity_id: input_boolean.movie_mode
+    state: 'off'
+  - service: script.living_room_bedtime
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - service: light.turn_on
+    target:
+      entity_id: light.cabinet_lights
+    data:
+      transition: 1800
+      color_temp: 450
+  mode: single
+- id: '1626554999048'
+  alias: Movie Mode ON
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: input_boolean.movie_mode
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: input_number.set_value
+    target:
+      entity_id: input_number.movie_mode
+    data_template:
+      value: '{{states.sensor.brightness_lr.state | int}}'
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.cabinet_lights
+      - light.table_lamp
+      - light.recessed_lights
+      - light.pantry
+    data:
+      transition: 15
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.overhead_light
+      - switch.chandelier
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.floor_lamp_left
+      - light.floor_lamp_right
+    data:
+      transition: 15
+      color_temp: 500
+      brightness: 60
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom_bias_light
+    data:
+      transition: 15
+      color_temp: 500
+      brightness: 175
+  mode: single
+- id: '1626555569822'
+  alias: Movie Mode OFF
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: input_boolean.movie_mode
+    from: 'on'
+    to: 'off'
+  condition: []
+  action:
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.livingroom
+      - light.cabinet_lights
+    data:
+      transition: 15
+    data_template:
+      brightness: '{{ states.input_number.movie_mode.state | int }}'
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) <= 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) > 9.50 %}\n  300\n{% else\
+        \ %} {% endif %}\n"
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.pantry
+    data:
+      transition: 15
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.livingroom_bias_light
+    data:
+      transition: 15
+      brightness: 175
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) <= 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  300\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) > 9.50 %}\n  250\n{% else\
+        \ %} {% endif %}\n"
+  mode: single
+- id: '1626579326693'
+  alias: WFH Start
+  description: ''
+  trigger:
+  - platform: time
+    at: 09:30
+  condition:
+  - condition: and
+    conditions:
+    - condition: template
+      value_template: '{{ states.person.crystal.state != "home" }}'
+    - condition: state
+      entity_id: person.tristan
+      state: home
+    - condition: state
+      entity_id: light.hue_play_bar
+      state: 'on'
+    - condition: state
+      entity_id: media_player.vizio_m70_smartcast
+      state: 'off'
+    - condition: time
+      weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.tristan_wfh
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.livingroom
+      - light.master_bedroom
+      - light.recessed_lights
+      - light.ceiling_light
+  - service: script.fan_off
+  mode: single
+- id: '1626579759897'
+  alias: WFH Lunch Start
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: light.hue_play_bar
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: input_boolean.tristan_wfh
+    state: 'on'
+  - condition: time
+    after: '11:00:00'
+    before: '15:00:00'
+  action:
+  - service: script.livingroom_on
+  - service: script.master_bedroom_on
+  - service: script.fan_on
+  - service: light.turn_on
+    target:
+      entity_id: light.recessed_lights
+  - service: media_player.turn_on
+    target:
+      entity_id: media_player.shield_tv
+  - service: lock.unlock
+    target:
+      entity_id: lock.back_door
+  mode: single
+- id: '1626579916845'
+  alias: WFH Lunch End
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: light.hue_play_bar
+    to: 'on'
+  condition:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.tristan_wfh
+      state: 'on'
+    - condition: time
+      after: '11:00:00'
+      before: '16:00:00'
+      weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+  action:
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.shield_tv
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.master_bedroom
+      - light.livingroom
+      - light.recessed_lights
+      - light.livingroom_bias_light
+  - service: script.fan_off
+  mode: single
+- id: '1626580137443'
+  alias: WFH End
+  description: ''
+  trigger:
+  - platform: time
+    at: '16:30:00'
+  condition:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.tristan_wfh
+      state: 'on'
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.tristan_wfh
+  - condition: state
+    entity_id: person.tristan
+    state: home
+  - service: script.livingroom_on
+  - service: script.master_bedroom_on
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.recessed_lights
+      - light.ceiling_light
+    data:
+      brightness: 255
+  mode: single
+- id: '1626622231793'
+  alias: Patio Lights Off - Morning
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 00:30:00
+  condition: []
+  action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.patio_lights
+  mode: single
+- id: '1626650040519'
+  alias: Shield Unavailable
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: media_player.shield_tv
+    to: unavailable
+  condition: []
+  action:
+  - service: notify.mobile_app_tristans_phone
+    data:
+      message: 'The shield is still fucked. '
+      title: Hey idiot
+  mode: single
+- id: '1626658754261'
+  alias: Printer Light ON
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.ender_3_pro_target_bed_temp
+    above: '50'
+  - platform: state
+    entity_id: binary_sensor.ender_3_pro_printing
+    to: 'on'
+  condition: []
+  action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.printer_light
+  mode: single
+- id: '1626658793219'
+  alias: Printer Light OFF
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.ender_3_pro_actual_bed_temp
+    below: '50'
+  condition: []
+  action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.printer_light
+  mode: single
+- id: '1626733987672'
+  alias: Garage Door Left Open
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: cover.garage_door_opener
+    to: open
+    for: 00:10:00
+  condition: []
+  action:
+  - service: notify.notify_family
+    data:
+      message: 'The garage door has been open for 10 minutes. '
+      data:
+        url: /lovelace/home
+        clickAction: /lovelace/home
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - service: tts.google_translate_say
+    data:
+      entity_id: media_player.all_assistants
+      message: 'Heads up, the garage door is currently open. '
+  mode: single
+- id: '1626735584209'
+  alias: Leak notifications
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.hvac_leak_sensor_water
+    to: 'on'
+  - platform: state
+    entity_id: binary_sensor.water_heater_leak_sensor_water
+    to: 'on'
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hvac_leak_sensor_water
+        state: 'on'
+      sequence:
+      - service: notify.notify_family
+        data:
+          message: A leak has been detected near the HVAC unit.
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.away_mode
+            state: 'off'
+          sequence:
+          - service: tts.google_translate_say
+            data:
+              message: Heads up, the Air Conditioner may be leaking.
+        default: []
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.water_heater_leak_sensor_water
+        state: 'on'
+      sequence:
+      - service: notify.notify_family
+        data:
+          message: A leak has been detected near the water heater.
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.away_mode
+            state: 'off'
+          sequence:
+          - service: tts.google_translate_say
+            data:
+              entity_id: Heads up, the water heater may be leaking.
+        default: []
+    default: []
+  mode: single
+- id: '1626735741287'
+  alias: Garage opening
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: cover.garage_door_opener
+    from: closed
+  condition:
+  - condition: state
+    entity_id: 'input_boolean.away_mode '
+    state: 'off'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.foyer
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: light.turn_off
+    target:
+      entity_id: light.foyer
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: light.turn_on
+    target:
+      entity_id: light.foyer
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: light.turn_off
+    target:
+      entity_id: light.foyer
+  mode: single

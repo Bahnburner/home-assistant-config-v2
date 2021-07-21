@@ -1,0 +1,45 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+homeassistant:
+  auth_providers:
+    - type: homeassistant  
+    - type: trusted_networks
+      trusted_networks:
+        - 10.0.0.0/24
+  name: Hidden Ridge
+  external_url: "https://smrtho.us"
+  internal_url: "https://smrtho.us"
+  allowlist_external_dirs:
+    - /config
+    - /config/www
+
+
+# Text to speech
+tts:
+  - platform: google_translate
+cloud: 
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+http:
+  server_port: 8123
+  ip_ban_enabled: false
+  login_attempts_threshold: 3
+  ssl_certificate: /certbot/live/smrtho.us/fullchain.pem
+  ssl_key: /certbot/live/smrtho.us/privkey.pem
+  ssl_profile: intermediate
+light: !include light.yaml
+nest: !include nest.yaml
+sensor: !include sensors.yaml
+camera: !include camera.yaml
+input_boolean: !include input_boolean.yaml
+input_number: !include input_number.yaml
+octoprint: !include octoprint.yaml
+media_player: !include media_player.yaml
+switch: !include switch.yaml
+weather: !include weather.yaml
+frontend: 
+  themes: !include_dir_merge_named themes
+notify: !include notify.yaml

@@ -1,0 +1,623 @@
+office_on:
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.desk_lamp
+      - light.office_floor_lamp
+      - light.office_corner_lamp
+      - light.hue_play_bar
+    data:
+      color_temp: 350
+      brightness: 255
+  - service: light.turn_on
+    data:
+      brightness: 200
+    target:
+      entity_id: light.man_cave_ceiling_light
+  mode: restart
+  alias: Office On
+office_off:
+  alias: Office Off
+  sequence:
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.hue_play_bar
+      - light.desk_lamp
+      - light.office_floor_lamp
+      - light.office_corner_lamp
+  - delay:
+      hours: 0
+      minutes: 2
+      seconds: 0
+      milliseconds: 0
+  - condition: state
+    entity_id: light.hue_play_bar
+    state: 'off'
+  - service: light.turn_off
+    target:
+      entity_id: light.man_cave_ceiling_light
+  mode: restart
+bias_light_on:
+  alias: Bias Light on
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom_bias_light
+    data:
+      transition: 5
+      brightness: 175
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) <= 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  300\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) > 9.50 %}\n  250\n{% else\
+        \ %}\n  300\n{% endif %}\n"
+  mode: restart
+goodnight:
+  alias: Goodnight
+  sequence:
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.downstairs_hallway
+    data:
+      target_temp_high: 72
+      target_temp_low: 66
+      hvac_mode: auto
+  - service: script.media_players_off
+  - service: lock.lock
+    target:
+      entity_id:
+      - lock.front_door
+      - lock.back_door
+  - service: cover.close_cover
+    target:
+      entity_id: cover.garage_door_opener
+  - service: light.turn_off
+    target:
+      entity_id: light.livingroom_bias_light
+  - service: script.fan_off
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.foyer
+      - light.dining_room
+      - light.recessed_lights
+      - light.mancave
+    data:
+      transition: 30
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.overhead_light
+      - switch.chandelier
+      - switch.christmas_lights
+      - switch.patio_lights
+  - service: script.whitenoise
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      transition: 30
+      color_temp: 500
+    data_template:
+      brightness: "{% if states.light.master_bedroom.state == 'off' %}\n  50\n{% elif\
+        \ states.light.master_bedroom.attributes.brightness|int < 50 %}\n  50\n{%\
+        \ else %}\n  100\n{% endif %}\n"
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.pantry
+      - light.livingroom
+    data:
+      transition: 60
+      brightness: 127
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.christmas_lights
+        state: 'on'
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.christmas_lights
+    default: []
+  - wait_for_trigger:
+    - platform: state
+      entity_id: light.master_bedroom
+      to: 'off'
+    timeout: 00:05:00
+  - condition: template
+    value_template: '{{ states.light.livingroom.attributes.brightness <=150 }}'
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.cabinet_lights
+      - light.livingroom
+  - service: light.turn_on
+    target:
+      entity_id: light.pantry
+    data:
+      brightness: 50
+      transition: 60
+  mode: single
+whitenoise:
+  alias: Whitenoise
+  sequence:
+  - condition: state
+    state: home
+    entity_id: group.tristal
+  - service: media_player.turn_on
+    target:
+      entity_id: media_player.master_suite
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.3
+    target:
+      entity_id: media_player.master_suite
+  - service: media_player.play_media
+    entity_id: media_player.master_suite
+    data:
+      media_content_type: audio/mp3
+    data_template:
+      media_content_id: "{% if states.sensor.whitenoise.state == '1' %}\n  http://smrtho.us/storage/whitenoise1.mp3\n\
+        {% elif states.sensor.whitenoise.state == '2' %}\n  http://smrtho.us/storage/whitenoise2.mp3\n\
+        {% elif states.sensor.whitenoise.state == '3' %}\n  http://smrtho.us/storage/whitenoise3.mp3\n\
+        {% else %}\n  http://smrtho.us/storage/whitenoise1.mp3\n{% endif %}\n"
+  mode: single
+cabinet_lights_weekday:
+  sequence:
+  - service: light.turn_on
+    entity_id: light.cabinet_lights
+    data_template:
+      brightness: '{{ states.sensor.brightness_lr.state | int }}'
+      color_temp: "{% if states.input_boolean.movie_mode.state == true %}\n  450\n\
+        {% elif (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n  450\n\
+        {% elif (states.sensor.decimal_time.state | round(2)) <= 09.50 %}\n  200\n\
+        {% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n  450\n\
+        {% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif (states.sensor.decimal_time.state\
+        \ | round(2)) > 9.50 %}\n  300\n{% else %}\n  366\n{% endif %}\n"
+  mode: single
+  alias: Cabinet Lights Weekday
+cabinet_lights_weekend:
+  alias: Cabinet Lights Weekend
+  sequence:
+  - service: light.turn_on
+    entity_id: light.cabinet_lights
+    data:
+      xy_color:
+      - 0.1605
+      - 0.3299
+    data_template:
+      brightness: '{{ states.sensor.brightness_lr.state | int }}'
+  mode: single
+fan_on:
+  alias: Fan On
+  sequence:
+  - condition: state
+    entity_id: input_boolean.fan_check
+    state: 'on'
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.fan_check
+  - service: fan.turn_on
+    target:
+      entity_id: fan.fan
+  mode: single
+fan_off:
+  alias: Fan Off
+  sequence:
+  - condition: state
+    entity_id: fan.fan
+    state: 'on'
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.fan_check
+  - service: fan.turn_off
+    target:
+      entity_id: fan.fan
+  mode: single
+master_bedroom_on:
+  alias: Master Bedroom ON
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) <= 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) > 9.50 %}\n  300\n{% else\
+        \ %}\n  366\n{% endif %}\n"
+      brightness: "{% if states.sensor.decimal_time.state | int > 6 and states.sensor.decimal_time.state\
+        \ |int < 22 %}\n   254\n{% else %}\n   150\n{% endif %}\n"
+  mode: single
+livingroom_on:
+  alias: Living Room ON
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      brightness: 255
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) < 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) >= 9.50 %}\n  300\n{% else\
+        \ %}\n  366\n{% endif %}\n  \n"
+  mode: single
+media_players_off:
+  alias: Media Players Off
+  sequence:
+  - service: media_player.turn_off
+    entity_id:
+    - media_player.shield_tv
+    - media_player.vizio_m70_smartcast
+    - media_player.livingroom_assistant
+    - media_player.tristans_clock
+    - media_player.crystals_clock
+    - media_player.bathroom_assistant
+    - media_player.mancave_assistant
+    - media_player.she_shed_assistant
+    - media_player.nursery_assistant
+    - media_player.dining_room_speaker
+    - media_player.kitchen_display
+    - media_player.nursery_tv
+    - media_player.vizio_v50_smartcast
+    - media_player.garage_speaker
+  mode: single
+goodbye:
+  alias: Goodbye
+  sequence:
+  - service: lock.lock
+    target:
+      entity_id:
+      - lock.front_door
+      - lock.back_door
+  - service: media_player.volume_set
+    target:
+      entity_id: media_player.all_speakers
+    data:
+      volume_level: 0.4
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - service: cover.open_cover
+    target:
+      entity_id: cover.garage_door_opener
+  - service: light.turn_off
+    target:
+      entity_id: light.livingroom_bias_light
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.shield_tv
+  - service: script.media_players_off
+  mode: single
+close_garage:
+  alias: close garage
+  sequence:
+  - service: cover.close_cover
+    target:
+      entity_id: cover.garage_door_opener
+  mode: single
+open_garage:
+  alias: open garage
+  sequence:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - service: cover.open_cover
+    target:
+      entity_id: cover.garage_door_opener
+  mode: single
+home:
+  alias: home
+  sequence:
+  - service: cover.close_cover
+    target:
+      entity_id: cover.garage_door_opener
+  - service: automation.trigger
+    target:
+      entity_id: automation.home_mode
+  - service: media_player.turn_on
+    target:
+      entity_id: media_player.shield_tv
+  mode: single
+living_room_evening:
+  alias: Living Room EVENING
+  sequence:
+  - condition: state
+    entity_id: input_boolean.movie_mode
+    state: 'off'
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      transition: 1800
+      color_temp: 366
+  - condition: state
+    entity_id: light.livingroom_bias_light
+    state: 'on'
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom_bias_light
+    data:
+      transition: 1800
+      color_temp: 300
+      brightness: 175
+  mode: single
+master_bedroom_evening:
+  alias: Master Bedroom EVENING
+  sequence:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - condition: state
+    entity_id: light.master_bedroom
+    state: 'on'
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      transition: 60
+      color_temp: 366
+  mode: single
+living_room_bedtime:
+  alias: Living Room BEDTIME
+  sequence:
+  - condition: state
+    entity_id: input_boolean.movie_mode
+    state: 'off'
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      transition: 1800
+      color_temp: 500
+  - condition: state
+    entity_id: light.livingroom_bias_light
+    state: 'on'
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom_bias_light
+    data:
+      transition: 1800
+      color_temp: 500
+      brightness: 175
+  mode: single
+master_bedroom_bedtime:
+  alias: Master Bedroom BEDTIME
+  sequence:
+  - condition: state
+    entity_id: input_boolean.away_mode
+    state: 'off'
+  - condition: state
+    entity_id: light.master_bedroom
+    state: 'on'
+  - service: light.turn_on
+    target:
+      entity_id: light.master_bedroom
+    data:
+      transition: 60
+      color_temp: 500
+  mode: single
+good_morning:
+  alias: Good Morning
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.recessed_lights
+    data:
+      brightness: 255
+  - service: light.turn_on
+    target:
+      entity_id: light.livingroom
+    data:
+      brightness: 255
+    data_template:
+      color_temp: "{% if (states.sensor.decimal_time.state | round(2)) <= 05.00 %}\n\
+        \  500\n{% elif (states.sensor.decimal_time.state | round(2)) < 09.50 %}\n\
+        \  200\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.25 %}\n\
+        \  500\n{% elif states.sun.sun.attributes.elevation < 8 %}\n  366\n{% elif\
+        \ (states.sensor.decimal_time.state | round(2)) >= 9.50 %}\n  300\n{% else\
+        \ %}\n  366\n{% endif %}\n  \n"
+  - service: lock.unlock
+    target:
+      entity_id: lock.back_door
+  - service: script.fan_on
+  - choose:
+    - conditions:
+      - condition: sun
+        before: sunrise
+        before_offset: 00:30:00
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.patio_lights
+    default: []
+  mode: single
+pantry:
+  alias: Pantry
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.pantry
+    data_template:
+      brightness: "{% if (states.sensor.decimal_time.state | round(2)) <= 01.50 %}\n\
+        \  00\n{% elif (states.sensor.decimal_time.state | round(2)) <= 06.83 %}\n\
+        \  50\n{% elif (states.sensor.decimal_time.state | round(2)) <= 22.00 %}\n\
+        \  255\n{% elif (states.sensor.decimal_time.state | round(2)) >= 22.00 %}\n\
+        \  50\n{% else %}\n  255\n{% endif %}\n"
+  mode: single
+revert:
+  alias: Revert
+  sequence:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.foyer
+        state: 'on'
+      sequence:
+      - service: light.turn_on
+        data:
+          color_temp: 300
+          brightness: 255
+      - service: light.turn_off
+        target:
+          entity_id: light.foyer
+    default: []
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: media_player.vizio_m70_smartcast
+        state: 'on'
+      sequence:
+      - service: script.bias_light_on
+    - conditions:
+      - condition: state
+        entity_id: media_player.vizio_m70_smartcast
+        state: 'off'
+      sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.livingroom_bias_light
+    default: []
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.dining_room
+        state: 'on'
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.dining_room
+        data:
+          color_temp: 300
+          brightness: 255
+      - service: light.turn_off
+        target:
+          entity_id: light.dining_room
+    default: []
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.movie_mode
+        state: 'on'
+      sequence:
+      - service: automation.turn_on
+        target:
+          entity_id: automation.movie_mode_on
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.movie_mode
+        state: 'off'
+      - condition: state
+        entity_id: light.livingroom
+        state: 'on'
+      sequence:
+      - service: script.livingroom_on
+      - choose:
+        - conditions:
+          - condition: time
+            weekday:
+            - mon
+            - tue
+            - wed
+            - thu
+            - fri
+          sequence:
+          - service: script.cabinet_lights_weekday
+        - conditions:
+          - condition: time
+            weekday:
+            - sat
+            - sun
+          sequence:
+          - service: script.cabinet_lights_weekend
+        default: []
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.movie_mode
+        state: 'off'
+      - condition: state
+        entity_id: light.livingroom
+        state: 'off'
+      sequence:
+      - service: script.livingroom_on
+      - service: light.turn_off
+        target:
+          entity_id: light.livingroom
+    default: []
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.master_bedroom
+        state: 'on'
+      sequence:
+      - service: script.master_bedroom_on
+    - conditions:
+      - condition: state
+        entity_id: light.master_bedroom
+        state: 'off'
+      sequence:
+      - service: script.master_bedroom_on
+      - service: light.turn_off
+        target:
+          entity_id: light.master_bedroom
+    default: []
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.pantry
+        state: 'on'
+      sequence:
+      - service: script.pantry
+    default: []
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: sun.sun
+        below: '8'
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.exterior
+        data:
+          brightness_pct: 255
+    - conditions:
+      - condition: numeric_state
+        entity_id: sun.sun
+        above: '8'
+      sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.exterior
+    default: []
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: sun.sun
+        below: '8'
+      - condition: time
+        before: 00:00:00
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.patio_lights
+    - conditions:
+      - condition: numeric_state
+        entity_id: sun.sun
+        below: '8'
+      - condition: time
+        after: 00:00:00
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.patio_lights
+    default: []
+  mode: single

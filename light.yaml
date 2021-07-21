@@ -1,0 +1,56 @@
+- platform: group
+  name: Front Floods
+  entities:
+  - light.front_flood_light_1
+  - light.front_flood_light_2
+- platform: group
+  name: Rear Floods
+  entities:
+  - light.rear_flood_light_1
+  - light.rear_flood_light_2
+- platform: group
+  name: Exterior
+  entities:
+  - light.front_floods
+  - light.rear_floods
+  - light.front_door
+- platform: group
+  name: livingroom
+  entities:
+  - light.floor_lamp_left
+  - light.floor_lamp_right
+  - light.table_lamp
+- platform: group
+  name: Master Bedroom
+  entities:
+  - light.tristans_nightstand
+  - light.crystals_nightstand
+  - light.bedroom_floor_lamp
+- platform: group
+  name: hue play bar
+  entities:
+  - light.hue_play_left
+  - light.hue_play_center
+  - light.hue_play_right
+- platform: switch
+  name: desk lamp
+  entity_id: switch.desk_light
+- platform: group
+  name: Mancave
+  entities: 
+  - light.hue_play_bar
+  - light.office_corner_lamp
+  - light.office_floor_lamp
+  - light.man_cave_ceiling_light
+  - light.desk_lamp
+- platform: group
+  name: Dining Room
+  entities: 
+  - light.dining_room_left
+  - light.dining_room_right
+- platform: group
+  name: Foyer
+  entities:
+  - light.foyer_left
+  - light.foyer_right
+

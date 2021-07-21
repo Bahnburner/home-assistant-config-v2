@@ -1,0 +1,7 @@
+- name: notify_family
+  platform: group
+  services:
+    - service: mobile_app_tristans_phone
+    - service: mobile_app_crystals_phone
+    - service: mobile_app_galaxy_tab_s7
+

@@ -1,0 +1,47 @@
+- platform: time_date
+  display_options:
+    - 'time'
+- platform: template
+  sensors:
+    decimal_time:
+      value_template: '{{(now().strftime("%H") | int) + (now().strftime("%M")|int / 60) | round(2)}}'
+    tautulli_streams:
+      value_template: '{{ states.sensor.tautulli.attributes.stream_count }}'
+      icon_template: mdi:cloud-upload-outline
+      friendly_name: 'Streams'
+      unit_of_measurement: ' '
+    tautulli_transcodes:
+      value_template: '{{ states.sensor.tautulli.attributes.stream_count_transcode }}'
+      icon_template: mdi:cloud-upload
+      friendly_name: 'Transcodes'
+      unit_of_measurement: ' '
+    ender_3_pro_print_time_remaining:
+      value_template: >
+        {% set minutes = (states.sensor.ender_3_pro_time_remaining.state|int/60) | int %}{% set hours = (minutes/60) |int %}{% set minutes = minutes-(hours*60)%}{% set seconds = states.sensor.ender_3_pro_time_remaining.state|int - (minutes*60) - ((hours*60)*60) %}{%if hours==0 %}{% elif hours==1%}{{hours}} hour, {% else %}{{hours}} hours, {% endif %}{%if minutes==0 %}{% elif minutes==1%}{{minutes}} minute{% else %}{{minutes}} minutes{% endif %}{% if hours == 0 and minutes == 0 and seconds > 30 %}Less than a minute{%elif hours == 0 and minutes == 0 and seconds == 0 and states.sensor.ender_3_pro_print_job_percentage.state == "100"%}Print Complete{%elif states.sensor.ender_3_pro_time_remaining.state == "unknown" %}Calculating...{%elif hours == 0 and minutes == 0 and seconds <= 30 and states.sensor.ender_3_pro_time_remaining != "unknown" %}A few seconds{%endif%}
+      friendly_name: 'Time Remaining'
+    ender_3_pro_print_job_percentage:
+      value_template: '{{ states.sensor.ender_3_pro_job_percentage.state|int }}'
+      friendly_name: 'Job Progress'
+      unit_of_measurement: '%'   
+    brightness_pantry:
+      value_template: >
+        {% if states.light.pantry.state == 'off'%}
+          0
+        {% else %}
+          {{states.light.pantry.attributes.brightness | int}}
+        {% endif %}
+    brightness_lr:
+      value_template: >
+        {% if states.light.livingroom.state == 'off'%}
+          0
+        {% else %}
+          {{states.light.livingroom.attributes.brightness | int}}
+        {% endif %}
+- platform: tautulli
+  api_key: !secret tautulli
+  host: 10.0.0.109
+  scan_interval: 5
+- platform: random
+  name: whitenoise
+  minimum: 1
+  maximum: 8

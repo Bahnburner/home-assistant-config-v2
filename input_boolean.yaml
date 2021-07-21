@@ -1,0 +1,13 @@
+fan_check:
+  name: Fan Check
+  initial: off
+goodnight_initiated:
+  initial: off
+movie_mode:
+  initial: off
+christmas_lights:
+  initial: off
+tristan_wfh:
+  initial: off    
+away_mode:
+garage_hot_start:
