@@ -26,12 +26,6 @@
   - light.tristans_nightstand
   - light.crystals_nightstand
   - light.bedroom_floor_lamp
-- platform: group
-  name: hue play bar
-  entities:
-  - light.hue_play_left
-  - light.hue_play_center
-  - light.hue_play_right
 - platform: switch
   name: desk lamp
   entity_id: switch.desk_light
