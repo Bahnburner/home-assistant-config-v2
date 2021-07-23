@@ -39,10 +39,10 @@
         {% endif %}
     family_home:
       value_template: >
-        {% if states.input_boolean.away_mode.state == true %}
-          false
-        {% if states.input_boolean.away_mode.state == false %}
-          true
+        {% if states.light.livingroom.state == 'off'%}
+          0
+        {% else %}
+          {{states.light.livingroom.attributes.brightness | int}}
         {% endif %}
 - platform: tautulli
   api_key: !secret tautulli
