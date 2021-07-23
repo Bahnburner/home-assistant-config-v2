@@ -37,6 +37,13 @@
         {% else %}
           {{states.light.livingroom.attributes.brightness | int}}
         {% endif %}
+    family_home:
+      value_tempalte: >
+        {% if states.input_boolean.away_mode.state == true %}
+          false
+        {% if states.input_boolean.away_mode.state == false %}
+          true
+        {% endif %}
 - platform: tautulli
   api_key: !secret tautulli
   host: 10.0.0.109
