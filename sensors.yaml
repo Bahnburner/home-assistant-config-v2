@@ -38,7 +38,7 @@
           {{states.light.livingroom.attributes.brightness | int}}
         {% endif %}
     family_home:
-      value_tempalte: >
+      value_template: >
         {% if states.input_boolean.away_mode.state == true %}
           false
         {% if states.input_boolean.away_mode.state == false %}
