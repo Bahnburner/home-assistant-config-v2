@@ -1,6 +1,7 @@
 - platform: template
-  family_home:
-  value_template: >
+  sensors:
+    family_home:
+    value_template: >
       {% if states.input_boolean.away_mode.state == true %}
         false
       {% elif states.input_boolean.away_mode.state == false %}
