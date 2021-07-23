@@ -20,12 +20,6 @@
   - light.floor_lamp_left
   - light.floor_lamp_right
   - light.table_lamp
-- platform: group
-  name: Master Bedroom
-  entities:
-  - light.tristans_nightstand
-  - light.crystals_nightstand
-  - light.bedroom_floor_lamp
 - platform: switch
   name: desk lamp
   entity_id: switch.desk_light
@@ -37,14 +31,4 @@
   - light.office_floor_lamp
   - light.man_cave_ceiling_light
   - light.desk_lamp
-- platform: group
-  name: Dining Room
-  entities: 
-  - light.dining_room_left
-  - light.dining_room_right
-- platform: group
-  name: Foyer
-  entities:
-  - light.foyer_left
-  - light.foyer_right
 
