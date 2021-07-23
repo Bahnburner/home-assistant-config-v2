@@ -45,8 +45,7 @@
   name: whitenoise
   minimum: 1
   maximum: 8
-sensor:
-  - platform: darksky
-    api_key: !secret darksky
-    monitored_conditions:
-      - icon
+- platform: darksky
+  api_key: !secret darksky
+  monitored_conditions:
+    - icon
