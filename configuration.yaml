@@ -18,6 +18,7 @@ homeassistant:
 # Text to speech
 tts:
   - platform: google_translate
+binary_sensor: !include binary_sensor.yaml
 cloud: 
 group: !include groups.yaml
 automation: !include automations.yaml
