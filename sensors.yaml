@@ -25,16 +25,16 @@
       unit_of_measurement: '%'   
     brightness_pantry:
       value_template: >
-        {% if states.light.pantry.state == 'off'%}
+        {% elif states.light.pantry.state == 'off'%}
           0
-        {% else %}
+        {% elif states.light.pantry.state == 'on' %}
           {{states.light.pantry.attributes.brightness | int}}
         {% endif %}
     brightness_lr:
       value_template: >
         {% if states.light.livingroom.state == 'off'%}
           0
-        {% else %}
+        {% elif states.light.livingroom.state == 'on' %}
           {{states.light.livingroom.attributes.brightness | int}}
         {% endif %}
 - platform: tautulli
