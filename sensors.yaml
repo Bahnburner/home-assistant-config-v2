@@ -25,7 +25,7 @@
       unit_of_measurement: '%'   
     brightness_pantry:
       value_template: >
-        {% elif states.light.pantry.state == 'off'%}
+        {% if states.light.pantry.state == 'off'%}
           0
         {% elif states.light.pantry.state == 'on' %}
           {{states.light.pantry.attributes.brightness | int}}
