@@ -22,7 +22,7 @@ binary_sensor: !include binary_sensor.yaml
 cloud: 
 logger:
     filters:
-    custom_components.hacs: critical
+      custom_components.hacs: critical
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
