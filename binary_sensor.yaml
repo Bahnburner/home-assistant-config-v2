@@ -1,9 +1,9 @@
 - platform: template
-  sensors:
-    family_home:
-      value_template: >
-        {% if states.input_boolean.away_mode.state == true %}
-          false
-        {% elif states.input_boolean.away_mode.state == false %}
-          true
-        {% endif %}
+  binary_sensors:
+    garage_door:
+    value_template: >
+      {% if states.cover.garage_door_opener.state in ['open','opening'] %}
+        true
+      {% elif states.cover.garage_door_opener.state in ['closed','closing'] %}
+        false
+      {% endif %}
