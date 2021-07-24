@@ -20,6 +20,11 @@
   - light.floor_lamp_left
   - light.floor_lamp_right
   - light.table_lamp
+- platform: group
+  name: foyer
+  entities:
+    - light.foyer_left
+    - light.foyer_right
 - platform: switch
   name: desk lamp
   entity_id: switch.desk_light
