@@ -2,8 +2,8 @@
   sensors:
     garage_door:
       value_template: >
-      {% if states.cover.garage_door_opener.state in ['open','opening'] %}
-        true
-      {% elif states.cover.garage_door_opener.state in ['closed','closing'] %}
-        false
-      {% endif %}
+        {% if states.cover.garage_door_opener.state in ['open','opening'] %}
+          true
+        {% elif states.cover.garage_door_opener.state in ['closed','closing'] %}
+          false
+        {% endif %}
