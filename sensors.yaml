@@ -39,12 +39,16 @@
         {% endif %}
     ender_bed_temp_actual:
       value_template: '{{ (((states.sensor.ender_3_pro_actual_bed_temp.state | int) - 32) / (9/5) )| int }}'
+      unit_of_measurement: '°C'
     ender_bed_temp_target:
       value_template: '{{ (((states.sensor.ender_3_pro_target_bed_temp.state | int) - 32) / (9/5) )| int }}'
+      unit_of_measurement: '°C'
     ender_ext_temp_actual:
       value_template: '{{ (((states.sensor.ender_3_pro_actual_tool0_temp.state | int) - 32) / (9/5) )| int }}'
+      unit_of_measurement: '°C'
     ender_ext_temp_target:
       value_template: '{{ (((states.sensor.ender_3_pro_target_tool0_temp.state | int) - 32) / (9/5) )| int }}'
+      unit_of_measurement: '°C'
 - platform: tautulli
   api_key: !secret tautulli
   host: 10.0.0.109
