@@ -7,3 +7,10 @@
         {% elif states.cover.garage_door_opener.state in ['closed','closing'] %}
           false
         {% endif %}
+    nursery_lights:
+      value_template: >
+        {% if states.light.ceiling_light.state == 'on' or states.light.led_light_strip.state == 'on' or states.switch.nightlight.state == 'on' %}
+          true
+        {% else %}
+          false
+        {% endif %}
