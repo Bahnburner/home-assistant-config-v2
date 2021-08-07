@@ -1,3 +1,7 @@
 tristal:
   - person.tristan
   - person.crystal
+jensens_lights:
+  - light.ceiling_light
+  - light.led_light_strip
+  - switch.nightlight
