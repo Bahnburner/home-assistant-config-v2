@@ -59,6 +59,14 @@ bias_light_on:
 goodnight:
   alias: Goodnight
   sequence:
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.pantry
+      - light.livingroom
+    data:
+      transition: 60
+      brightness: 127
   - service: climate.set_temperature
     target:
       entity_id: climate.downstairs_hallway
@@ -106,31 +114,16 @@ goodnight:
       brightness: "{% if states.light.master_bedroom.state == 'off' %}\n  50\n{% elif\
         \ states.light.master_bedroom.attributes.brightness|int < 50 %}\n  50\n{%\
         \ else %}\n  100\n{% endif %}\n"
-  - service: light.turn_on
+  - service: switch.turn_off
     target:
-      entity_id:
-      - light.pantry
-      - light.livingroom
-    data:
-      transition: 60
-      brightness: 127
-  - choose:
-    - conditions:
-      - condition: state
-        entity_id: input_boolean.christmas_lights
-        state: 'on'
-      sequence:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.christmas_lights
-    default: []
+      entity_id: switch.christmas_lights
   - wait_for_trigger:
     - platform: state
       entity_id: light.master_bedroom
       to: 'off'
     timeout: 00:05:00
   - condition: template
-    value_template: '{{ states.light.livingroom.attributes.brightness <=150 }}'
+    value_template: '{{ states.light.livingroom.attributes.brightness < 255 }}'
   - service: light.turn_off
     target:
       entity_id:
@@ -199,6 +192,9 @@ fan_on:
   - condition: state
     entity_id: input_boolean.fan_check
     state: 'on'
+  - condition: state
+    entity_id: fan.fan
+    state: 'off'
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.fan_check
@@ -209,6 +205,9 @@ fan_on:
 fan_off:
   alias: Fan Off
   sequence:
+  - condition: state
+    entity_id: input_boolean.fan_check
+    state: 'off'
   - condition: state
     entity_id: fan.fan
     state: 'on'
@@ -377,8 +376,8 @@ living_room_bedtime:
     target:
       entity_id: light.livingroom
     data:
-      transition: 1800
       color_temp: 500
+      transition: 900
   - condition: state
     entity_id: light.livingroom_bias_light
     state: 'on'
@@ -386,7 +385,7 @@ living_room_bedtime:
     target:
       entity_id: light.livingroom_bias_light
     data:
-      transition: 1800
+      transition: 900
       color_temp: 500
       brightness: 175
   mode: single
@@ -620,4 +619,83 @@ revert:
         target:
           entity_id: switch.patio_lights
     default: []
+  mode: single
+jensens_bedtime:
+  alias: Jensen's Bedtime
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.led_light_strip
+    data:
+      color_temp: 500
+      brightness: 50
+  - service: light.turn_off
+    target:
+      entity_id: light.ceiling_light
+    data:
+      transition: 60
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.nursery_tv
+  - service: media_player.play_media
+    entity_id: media_player.nursery_assistant
+    data:
+      media_content_type: audio/mp3
+    data_template:
+      media_content_id: "{% if states.sensor.whitenoise.state == '1' %}\n  http://smrtho.us/storage/whitenoise1.mp3\n\
+        {% elif states.sensor.whitenoise.state == '2' %}\n  http://smrtho.us/storage/whitenoise2.mp3\n\
+        {% elif states.sensor.whitenoise.state == '3' %}\n  http://smrtho.us/storage/whitenoise3.mp3\n\
+        {% else %}\n  http://smrtho.us/storage/whitenoise1.mp3\n{% endif %}\n"
+  mode: single
+go_tigers_go:
+  sequence:
+  - service: media_player.volume_mute
+    data:
+      is_volume_muted: true
+    target:
+      entity_id: media_player.shield_tv
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.5
+    target:
+      entity_id: media_player.party_mode
+  - service: media_player.play_media
+    data:
+      media_content_id: http://smrtho.us/storage/GoTigersGo.mp3
+      media_content_type: audio/mp3
+    target:
+      entity_id: media_player.party_mode
+  - service: light.turn_on
+    data:
+      color_name: blue
+    target:
+      entity_id:
+      - light.livingroom
+      - light.livingroom_bias_light
+      - light.cabinet_lights
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 17
+      milliseconds: 0
+  - service: media_player.volume_mute
+    target:
+      entity_id: media_player.shield_tv
+    data:
+      is_volume_muted: false
+  - service: script.revert
+  mode: single
+  alias: Go tigers go
+tiger_timer:
+  alias: tiger timer
+  sequence:
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 17
+      milliseconds: 0
+  - service: script.revert
+  - service: media_player.volume_mute
+    target:
+      entity_id: media_player.shield_tv
   mode: single
