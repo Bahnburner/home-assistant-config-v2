@@ -40,7 +40,6 @@ sensor: !include sensors.yaml
 camera: !include camera.yaml
 input_boolean: !include input_boolean.yaml
 input_number: !include input_number.yaml
-octoprint: !include octoprint.yaml
 media_player: !include media_player.yaml
 switch: !include switch.yaml
 weather: !include weather.yaml
