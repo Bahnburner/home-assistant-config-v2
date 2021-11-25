@@ -25,6 +25,7 @@ logger:
     custom_components.hacs: critical
 group: !include groups.yaml
 automation: !include automations.yaml
+ecovacs: !include ecovacs.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 http:
