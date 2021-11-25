@@ -1,0 +1,5 @@
+
+username: !secret ecovacs_user
+password: !secret ecovacs_pass
+country: us
+continent: na
