@@ -36,4 +36,9 @@
   - light.office_floor_lamp
   - light.man_cave_ceiling_light
   - light.desk_lamp
-
+- platform: group
+  name: Hue Play Bar
+  entities: 
+  - light.hue_play_right
+  - light.hue_play_center
+  - light.hue_play_left
